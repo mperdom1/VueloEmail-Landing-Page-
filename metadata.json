@@ -1,0 +1,5 @@
+{
+  "name": "Vuelo Email",
+  "description": "Hemos creado y configurado un servidor de correos y mensajería y hecho una aplicación móvil que permita interactuar con él. Enviar correos electrónicos incluso a usuarios fuera del servidor y mensajería instantánea entre usuarios.",
+  "requestFramePermissions": []
+}

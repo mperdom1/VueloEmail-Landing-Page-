@@ -1,0 +1,90 @@
+================================================================================
+GUÍA DE CONFIGURACIÓN DEL SERVIDOR - PROYECTO VUELO EMAIL
+================================================================================
+Este documento detalla los pasos necesarios para desplegar la plataforma web 
+de Vuelo Email en una Instancia de VM (Linux/Ubuntu) en Google Cloud Platform (GCP).
+
+1. PREPARACIÓN DEL SISTEMA (LINUX VM)
+--------------------------------------------------------------------------------
+Actualiza los paquetes del sistema e instala las herramientas base:
+$ sudo apt update && sudo apt upgrade -y
+$ sudo apt install -y git curl build-essential
+
+2. INSTALACIÓN DE NODE.JS (Versión 18 o superior recomendada)
+--------------------------------------------------------------------------------
+Usando NVM (Node Version Manager) para mayor flexibilidad:
+$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+$ source ~/.bashrc
+$ nvm install 20
+$ nvm use 20
+
+3. CLONACIÓN Y CONSTRUCCIÓN DEL PROYECTO
+--------------------------------------------------------------------------------
+Clona el repositorio en el servidor:
+$ git clone <URL_DEL_REPOSITORIO>
+$ cd <CARPETA_DEL_PROYECTO>
+
+Instala las dependencias:
+$ npm install
+
+Crea el archivo de variables de entorno (.env):
+$ nano .env
+Agrega la clave de la IA (indispensable para el Asistente Técnico):
+GEMINI_API_KEY=tu_clave_aqui
+
+Genera los archivos de producción:
+$ npm run build
+(Esto creará una carpeta 'dist' con los archivos estáticos optimizados).
+
+4. CONFIGURACIÓN DEL SERVIDOR WEB (NGINX)
+--------------------------------------------------------------------------------
+Instala Nginx:
+$ sudo apt install nginx -y
+
+Configura el sitio (reemplaza 'vuelo.com' por tu IP o dominio):
+$ sudo nano /etc/nginx/sites-available/vuelo
+--- Pegar lo siguiente ---
+server {
+    listen 80;
+    server_name tu_ip_o_dominio;
+
+    root /ruta/hacia/tu/proyecto/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+--- Fin de configuración ---
+
+Activa el sitio y reinicia Nginx:
+$ sudo ln -s /etc/nginx/sites-available/vuelo /etc/nginx/sites-enabled/
+$ sudo nginx -t
+$ sudo systemctl restart nginx
+
+5. CONFIGURACIÓN DE FIREWALL EN GOOGLE CLOUD
+--------------------------------------------------------------------------------
+Para que los usuarios puedan entrar, debes abrir los puertos en la consola de GCP:
+1. Ve a "VPC Network" -> "Firewall".
+2. Crea una regla: "Allow HTTP" (Puerto 80) y "Allow HTTPS" (Puerto 443).
+3. Asegúrate de que los "Targets" coincidan con los tags de tu instancia de VM.
+
+6. INTEGRACIÓN CON LA APP ANDROID (FLUTTER)
+--------------------------------------------------------------------------------
+Para que la App Android y la Web se comuniquen correctamente:
+- Firebase: Asegúrate de que el archivo 'google-services.json' en Android y la 
+  configuración de Firebase en la Web apunten al MISMO proyecto de Firebase.
+- XMPP: Si usas un servidor XMPP propio (ej. Ejabberd), asegúrate de que el 
+  dominio sea accesible desde la IP pública del servidor.
+- CORS: Si tienes una API propia, configura los headers CORS para permitir 
+  peticiones desde el dominio de la web.
+
+7. SEGURIDAD ADICIONAL (RECOMENDADO)
+--------------------------------------------------------------------------------
+Instala SSL gratuito con Certbot para habilitar HTTPS:
+$ sudo apt install certbot python3-certbot-nginx -y
+$ sudo certbot --nginx -d tu_dominio.com
+
+================================================================================
+Ingeniería de Sistemas Operativos - Proyecto Vuelo Email 2026
+================================================================================
